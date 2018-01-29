@@ -388,39 +388,50 @@ def get_marker_thresholds(threshold_path, markers):
                 if "Positivity Threshold" in headers:
                     marker_threshold = row[headers.index("Positivity Threshold")]
                 else:
-                    r = re.compile(marker + ".*Threshold")
+                    r = re.compile(marker + " .*Threshold")
+                    # TODO: Error possible, out of range.
                     marker_threshold = row[headers.index(list(filter(r.match, headers))[0])]
-                thresholds[marker] = marker_threshold
+                thresholds[marker.lower()] = marker_threshold
     return thresholds
 
 
-# # Data on positive threshold information
-#     score_data <- read.csv(file = paste(path,"_score_data.txt",sep=""), head=TRUE, sep='\t', check.names = F)
-#     # Find all threshold values on spreadsheet
-#     thresholds <- c()
-#     for (marker in markers)
-#     {
-#         if ("Positivity.Threshold" %in% names(score_data))
-#         {
-#             marker_threshold <- score_data[grepl("Positivity Threshold", names(score_data))]
-#         }
-#         else
-#         {
-#             marker_threshold <- score_data[grepl(paste(marker, ".*Threshold", sep = ""), names(score_data))]
-#         }
-#         thresholds <- c(thresholds, marker_threshold)
-#     }
-#     names(thresholds) <- markers    
-#     thresholds
+def get_marker_regions(region_path):
+    region_info = { "MEMBRANE" : list(),
+                    "NUCLEUS"  : list() }
+    cell_compartments = list()
+    stain_components = list()
+
+    cell_pattern = ".*Cell Compartment"
+    stain_pattern = ".*Stain Component"
+
+    with open(region_path, newline = "") as score_file:
+        score_reader = csv.reader(score_file, delimiter = "\t")
+        headers = next(score_reader)
+        r_cell = re.compile(cell_pattern)
+        r_stain = re.compile(stain_pattern)
+        for row in score_reader:
+            # Get match object for each pattern, then iterate the matchs adding to lists.
+            cell_compartment_matches = list(filter(r_cell.match, headers))
+            stain_component_matches = list(filter(r_stain.match, headers))
+            
+            cell_compartment_list = [row[headers.index(x)] for x in cell_compartment_matches]
+            stain_component_list  = [row[headers.index(x)] for x in stain_component_matches]
+
+            cell_compartment_list = [x.split()[0].lower() for x in cell_compartment_list]
+            stain_component_list  = [x.split()[0].lower() for x in stain_component_list]
+
+            for i in range(len(cell_compartment_list)):
+                if cell_compartment_list[i].lower() == "membrane":
+                    region_info["MEMBRANE"].append(stain_component_list[i])
+                else:
+                    region_info["NUCLEUS"].append(stain_component_list[i])
+
+    return region_info
 
 
 def get_positive_sample_counts(markers, marker_scores, thresholds):
     pass
-
-
-def get_marker_regions(case_path):
-    pass
-
+    
 
 def compute_mm2(analysis_data, cell_summary_data, ts = False):
     pass
@@ -445,26 +456,36 @@ def count_combo_positives(cell_data, pm_combinations, thresholds):
 
 def analyze_case(case_path, case_files, ts):   
     # Get Case numbers from study
-    img_nums = get_img_numbers(case_files)
+    img_nums = sorted(get_img_numbers(case_files))
+
     print("IMG NUMS")
     pprint(img_nums)
 
     subpath_pattern = "(_)(\d+|\[\d+,\d+\])_[a-zA-Z_\.]+"
-    case_subpath = re.sub(subpath_pattern, "\g<1>", str(case_files[0]).split("/")[-1])
+    case_subpath = re.sub(subpath_pattern, 
+                          "\g<1>", 
+                          str(case_files[0]).split("/")[-1])
 
     print("CASE SUBPATH")
     print(case_subpath)
 
     # Get marker positive thresholds
-    threshold_path = case_path + "/" + case_subpath + img_nums[0] + "_score_data.txt"
+    threshold_path = case_path + "/" + \
+                     case_subpath + img_nums[0] + "_score_data.txt"
     thresholds = get_marker_thresholds(threshold_path, analysis_data["MARKERS"])
     print("THRESHOLDS")
     pprint(thresholds)
-    # Get the tissue regions for each marker
 
+    # Get the tissue regions for each marker
+    region_info = get_marker_regions(threshold_path)
+
+    print("REGION INFO")
+    pprint(region_info)
     
     # Iterate Case numbers
     for img_num in img_nums:
+        print("IMAGE NUMBER")
+        print(img_num)
         continue
     #   Get cell data set
     #   if ts
@@ -507,7 +528,7 @@ def analyze(analysis_data):
                 case_path = tumor_paths[0]
             else:
                 print("Saw Tumor/Stroma in" + \
-                      case_path +\
+                      case_path + \
                       ", but not directory could be found")
                 continue
             
