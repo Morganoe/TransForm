@@ -5,6 +5,10 @@ from tkinter import ttk
 import tkinter as tk
 
 from pathlib import Path
+import os
+import fnmatch as fnm
+import re
+import csv
 
 from pprint import pprint
 
@@ -230,8 +234,8 @@ class AnalysisWindow:
                                       )
 
         self.pm_index = 0
-        
-        if (file != "" and file.split(".")[-1] == "config"):
+
+        if (file != () and file.split(".")[-1] == "config"):
             with open(file, "r") as f:
                 for line in f:
                     combo_fields = self.combos_pane.interior.winfo_children()
@@ -265,10 +269,10 @@ class AnalysisWindow:
             curr_markers = [x.strip() for x in combo_fields[i+1].get().split(",")]
             combinations.append((curr_phenotypes, curr_markers))
             for pheno in curr_phenotypes:
-                if pheno not in phenotypes:
+                if pheno not in phenotypes and pheno is not "":
                     phenotypes.append(pheno)
             for marker in curr_markers:
-                if marker not in markers:
+                if marker not in markers and marker is not "":
                     markers.append(marker)
 
         analysis_data["PHENOTYPES"] = phenotypes
@@ -339,15 +343,91 @@ class VerticalScrolledFrame(ttk.Frame):
 ##############################
 ###### HELPER FUNCTIONS ######
 ##############################
+def has_subdir(files, target_dir_name):
+    str_paths = [str(x) for x in files]
+    target_paths = [x for x in str_paths if target_dir_name in x.lower()]
+    return (len(target_paths) > 0, target_paths)
 
-def is_tumor_stroma(study_files):
-    path_resolutions = [str(x).split("/")[-1].lower() for x in study_files]
 
-    if "stroma" in path_resolutions:
-        return True
-    else:
-        return False
+def is_tumor_stroma(case_files):
+    has_tumor, tumor_paths = has_subdir(files = case_files, 
+                                        target_dir_name = 'tumor')
+    has_stroma, stroma_paths = has_subdir(files = case_files, 
+                                          target_dir_name = 'stroma')
 
+    return (has_tumor or has_stroma,
+            tumor_paths,
+            stroma_paths)
+
+
+def get_img_numbers(case_files):
+    img_num_pattern = ".*_(\d+|\[\d+,\d+\])_[a-zA-Z_\.]+"
+    summary_pattern = "_cell_seg_data_summary.txt"
+
+    str_paths = [str(x) for x in case_files]
+    # Get all summary files in directory
+    summary_paths = [x for x in str_paths if re.search(summary_pattern, x) is not None]
+
+    # Extract image numbers from summary data paths
+    img_nums = [re.search(img_num_pattern, x).group(1) for x in summary_paths \
+             if re.search(img_num_pattern, x) is not None]
+
+    return img_nums
+
+
+def get_marker_thresholds(threshold_path, markers):
+    thresholds = dict()
+    with open(threshold_path, newline = "") as score_file:
+        score_reader = csv.reader(score_file, delimiter = "\t")
+        headers = next(score_reader)
+        for row in score_reader:
+            for marker in analysis_data["MARKERS"]:
+                marker_threshold = None
+                # Single marker cases produce thresholds with this title rather
+                # than using the marker name.
+                if "Positivity Threshold" in headers:
+                    marker_threshold = row[headers.index("Positivity Threshold")]
+                else:
+                    r = re.compile(marker + ".*Threshold")
+                    marker_threshold = row[headers.index(list(filter(r.match, headers))[0])]
+                thresholds[marker] = marker_threshold
+    return thresholds
+
+
+# # Data on positive threshold information
+#     score_data <- read.csv(file = paste(path,"_score_data.txt",sep=""), head=TRUE, sep='\t', check.names = F)
+#     # Find all threshold values on spreadsheet
+#     thresholds <- c()
+#     for (marker in markers)
+#     {
+#         if ("Positivity.Threshold" %in% names(score_data))
+#         {
+#             marker_threshold <- score_data[grepl("Positivity Threshold", names(score_data))]
+#         }
+#         else
+#         {
+#             marker_threshold <- score_data[grepl(paste(marker, ".*Threshold", sep = ""), names(score_data))]
+#         }
+#         thresholds <- c(thresholds, marker_threshold)
+#     }
+#     names(thresholds) <- markers    
+#     thresholds
+
+
+def get_positive_sample_counts(markers, marker_scores, thresholds):
+    pass
+
+
+def get_marker_regions(case_path):
+    pass
+
+
+def compute_mm2(analysis_data, cell_summary_data, ts = False):
+    pass
+
+
+def compute_percentages(analysis_data, cell_summary_data, ts = False):
+    pass
 ##################################
 ###### END HELPER FUNCTIONS ######
 ##################################
@@ -355,26 +435,87 @@ def is_tumor_stroma(study_files):
 ################################
 ###### ANALYSIS FUNCTIONS ######
 ################################
-def analyze_study(study_files, ts):
-    print(ts)
+def run_analysis_modes(selected_modes, analysis_data, cell_summary_data, ts = False):
+    pass
+
+
+def count_combo_positives(cell_data, pm_combinations, thresholds):
+    pass
+
+
+def analyze_case(case_path, case_files, ts):   
+    # Get Case numbers from study
+    img_nums = get_img_numbers(case_files)
+    print("IMG NUMS")
+    pprint(img_nums)
+
+    subpath_pattern = "(_)(\d+|\[\d+,\d+\])_[a-zA-Z_\.]+"
+    case_subpath = re.sub(subpath_pattern, "\g<1>", str(case_files[0]).split("/")[-1])
+
+    print("CASE SUBPATH")
+    print(case_subpath)
+
+    # Get marker positive thresholds
+    threshold_path = case_path + "/" + case_subpath + img_nums[0] + "_score_data.txt"
+    thresholds = get_marker_thresholds(threshold_path, analysis_data["MARKERS"])
+    print("THRESHOLDS")
+    pprint(thresholds)
+    # Get the tissue regions for each marker
+
+    
+    # Iterate Case numbers
+    for img_num in img_nums:
+        continue
+    #   Get cell data set
+    #   if ts
+    #     for each tissue region
+    #       Get positive marker count
+    #       Get cell data summary
+    #       Run analysis mode (MM2, Percentages, ...)
+    #       Append to running data sheet (Front, Master, Final, ...)
+    #   else
+    #     Get positive marker count
+    #     Get cell data summary
+    #     Run analysis mode (MM2, Percentages, ...)
+    #     Append to running data sheet (Front, Master, Final, ...)
+    #   Write final data frame for case to file.
 
 
 def analyze(analysis_data):
+    print("ANALYSIS DATA")
     pprint(analysis_data)
 
     root_path = analysis_data["INPUT DIR"]
-    studies = list(Path(root_path).glob("*"))
+    cases = list(Path(root_path).glob("*"))
 
-    for study_path in studies:
-        print(study_path)
-        study_files = list(Path(study_path).glob("*"))
-        print(study_files)
+    for case_path in cases:
+        print("CASE PATH")
+        print(case_path)
+        case_files = list(Path(case_path).glob("*"))
 
-        if is_tumor_stroma(study_files):
-            analyze_study(study_files, True)
+        is_ts = is_tumor_stroma(case_files)
+        tumor_paths = is_ts[1]
+        stroma_paths = is_ts[2]
+
+        print("IS TUMOR / STROMA")
+        pprint(is_ts)
+
+        if is_ts[0]:
+            if len(stroma_paths) > 0:
+                case_path = stroma_paths[0]
+            elif len(tumor_paths) > 0:
+                case_path = tumor_paths[0]
+            else:
+                print("Saw Tumor/Stroma in" + \
+                      case_path +\
+                      ", but not directory could be found")
+                continue
+            
+            case_files = list(Path(case_path).glob("*"))
+            analyze_case(case_path, case_files, True)
         else:
-            analyze_study(study_files, False)
-
+            analyze_case(case_path, case_files, False)
+        break
 
 
 
