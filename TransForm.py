@@ -410,13 +410,15 @@ def get_marker_regions(region_path):
         r_cell = re.compile(cell_pattern)
         r_stain = re.compile(stain_pattern)
         for row in score_reader:
-            # Get match object for each pattern, then iterate the matchs adding to lists.
+            # Get all matches for Cell Compartment and Stain Component.
             cell_compartment_matches = list(filter(r_cell.match, headers))
             stain_component_matches = list(filter(r_stain.match, headers))
             
+            # Create list of entries from subsequent rows.
             cell_compartment_list = [row[headers.index(x)] for x in cell_compartment_matches]
             stain_component_list  = [row[headers.index(x)] for x in stain_component_matches]
 
+            # Grab the marker name from the the extracted match list.
             cell_compartment_list = [x.split()[0].lower() for x in cell_compartment_list]
             stain_component_list  = [x.split()[0].lower() for x in stain_component_list]
 
@@ -431,7 +433,7 @@ def get_marker_regions(region_path):
 
 def get_positive_sample_counts(markers, marker_scores, thresholds):
     pass
-    
+
 
 def compute_mm2(analysis_data, cell_summary_data, ts = False):
     pass
@@ -462,6 +464,8 @@ def analyze_case(case_path, case_files, ts):
     pprint(img_nums)
 
     subpath_pattern = "(_)(\d+|\[\d+,\d+\])_[a-zA-Z_\.]+"
+    # Strip all characters from the image number to the end.
+    # Creates a common path across all images in case.
     case_subpath = re.sub(subpath_pattern, 
                           "\g<1>", 
                           str(case_files[0]).split("/")[-1])
@@ -473,6 +477,7 @@ def analyze_case(case_path, case_files, ts):
     threshold_path = case_path + "/" + \
                      case_subpath + img_nums[0] + "_score_data.txt"
     thresholds = get_marker_thresholds(threshold_path, analysis_data["MARKERS"])
+
     print("THRESHOLDS")
     pprint(thresholds)
 
@@ -486,9 +491,19 @@ def analyze_case(case_path, case_files, ts):
     for img_num in img_nums:
         print("IMAGE NUMBER")
         print(img_num)
-        continue
+
     #   Get cell data set
-    #   if ts
+    # cell_data <- read.csv(file = paste(case_path, "_cell_seg_data.txt", sep = ""), head = T, sep = '\t', stringsAsFactors = F, check.names = F)
+        case_cell_data_path = case_subpath + case + "_cell_seg_data.txt"
+        print("CASE CELL DATA PATH")
+        print(case_cell_data_path)
+
+        with open(case_cell_data_path, newline = "") as case_cell_data:
+            seg_data_reader = csv.reader(case_cell_data, delimiter = "\t")
+            headers = next(seg_data_reader)
+            for row in seg_data_reader:
+                continu
+e    #   if ts
     #     for each tissue region
     #       Get positive marker count
     #       Get cell data summary
@@ -500,6 +515,9 @@ def analyze_case(case_path, case_files, ts):
     #     Run analysis mode (MM2, Percentages, ...)
     #     Append to running data sheet (Front, Master, Final, ...)
     #   Write final data frame for case to file.
+
+
+        continue
 
 
 def analyze(analysis_data):

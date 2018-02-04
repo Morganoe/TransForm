@@ -56,26 +56,26 @@ data <- read.csv(data_file, header = T)
 
 dye_pattern <- "Dye\\.\\d+\\.Positive(?!\\.)"
 
-# targets <- list(list(2, "ALL"),
-#                 list(2),
-#                 list(2,5),
-#                 list(2,4),
-#                 list(2,4,5),
-#                 list(2,3),
-#                 list(2,3,5),
-#                 list(2,3,4),
-#                 list(2,3,4,5)
-#                 )
-targets <- list(list(2, 6, "ALL"),
-                list(2,6),
-                list(2,5,6),
-                list(2,4,6),
-                list(2,4,5,6),
-                list(2,3,6),
-                list(2,3,5,6),
-                list(2,3,4,6),
-                list(2,3,4,5,6)
-)
+targets <- list(list(2, "ALL"),
+                list(2),
+                list(2,5),
+                list(2,4),
+                list(2,4,5),
+                list(2,3),
+                list(2,3,5),
+                list(2,3,4),
+                list(2,3,4,5)
+                )
+# targets <- list(list(2, 6, "ALL"),
+#                 list(2,6),
+#                 list(2,5,6),
+#                 list(2,4,6),
+#                 list(2,4,5,6),
+#                 list(2,3,6),
+#                 list(2,3,5,6),
+#                 list(2,3,4,6),
+#                 list(2,3,4,5,6)
+# )
 # targets <- list(list(4, "ALL"),
 #                 list(4),
 #                 list(4,2),

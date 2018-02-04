@@ -337,7 +337,7 @@ get_percentage_data <- function(ret_data, summary_data, is_ts = F)
 }
 
 run_analysis_mode <- function(modes_selected, ret_data, summary_data, is_ts = F)
-{modes <- list("MM2", "Percentages", "Total Counts")
+{
 
     mode <- modes_selected[[1]]  # TODO: Expand for all selected
     switch(mode,

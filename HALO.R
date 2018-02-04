@@ -34,7 +34,7 @@ get_case_numbers <- function(rows)
 
 
 # Setup xlsx document.
-wb_name <- paste("HALO CD8 EXTRA2", ".xlsx", sep = "")
+wb_name <- paste("HALO ALL", ".xlsx", sep = "")
 
 # Remove old version of xlsx workbook.
 if (file.exists(wb_name)) file.remove(wb_name)
@@ -50,7 +50,7 @@ master_col <- 1
 percent_row <- 1
 percent_col <- 1
 
-root_path <- "/data/morgan/kristen_data/Re-Exported from HALO"
+root_path <- "/data/morgan/kristen_data/HALO3"
 
 dye_pattern <- "Dye\\.\\d+\\.Positive(?!\\.)"
 
@@ -64,16 +64,16 @@ dye_pattern <- "Dye\\.\\d+\\.Positive(?!\\.)"
 #                 list(2,3,4),
 #                 list(2,3,4,5)
 #                 )
-targets <- list(list(2, 6, "ALL"),
-                list(2,6),
-                list(2,5,6),
-                list(2,4,6),
-                list(2,4,5,6),
-                list(2,3,6),
-                list(2,3,5,6),
-                list(2,3,4,6),
-                list(2,3,4,5,6)
-)
+# targets <- list(list(2, 6, "ALL"),
+#                 list(2,6),
+#                 list(2,5,6),
+#                 list(2,4,6),
+#                 list(2,4,5,6),
+#                 list(2,3,6),
+#                 list(2,3,5,6),
+#                 list(2,3,4,6),
+#                 list(2,3,4,5,6)
+# )
 # targets <- list(list(4, "ALL"),
 #                 list(4),
 #                 list(4,2),
@@ -84,6 +84,7 @@ targets <- list(list(2, 6, "ALL"),
 #                 list(4,2,3,5),
 #                 list(4,3,5)
 #                 )
+targets <- list(list(1))
 
 titles <- c("Patient", "Img", paste(lapply(targets, paste, collapse = "/")))
 
@@ -125,7 +126,7 @@ for (i in list.files(root_path))
         case_num_pattern <- paste(".*_", num, "_component_data\\.tif", sep = "")
         case_num_rows <- data[grepl(case_num_pattern, data[[1]]),]
         dye_columns <- case_num_rows[grepl(dye_pattern, names(data), perl = T)]
-        dye_columns <- dye_columns[2:length(dye_columns)]
+        dye_columns <- dye_columns[1:length(dye_columns)]
         
         for (target in targets)
         {
